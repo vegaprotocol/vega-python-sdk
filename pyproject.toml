@@ -10,6 +10,8 @@ packages = [{include = "vega_wallet_python"}]
 [tool.poetry.dependencies]
 python = "^3.8"
 bip-utils = "^2.7.1"
+protoc-gen-openapiv2 = "^0.0.1"
+grpcio-tools = "^1.59.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"

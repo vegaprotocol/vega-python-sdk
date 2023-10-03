@@ -3,6 +3,7 @@ from bip_utils import (
     Bip32Slip10Ed25519,
     Bip39SeedGenerator,
 )
+from hashlib import sha3_256
 
 logger = getLogger(__name__)
 
@@ -30,4 +31,12 @@ class Signer:
     def from_private_key(cls: "Signer", private_key: str) -> "Signer":
         return Signer(
             ed25519_signer=Bip32Slip10Ed25519.FromPrivateKey(bytes.fromhex(private_key))
+        )
+
+    def sign(self, to_sign: bytes):
+        return (
+            self._signer.PrivateKey()
+            .KeyObject()
+            .UnderlyingObject()
+            .sign(sha3_256(to_sign).digest())[:64]
         )
