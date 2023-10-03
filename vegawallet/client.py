@@ -47,10 +47,7 @@ class Client:
     ) -> signature_proto.Signature:
         return signature_proto.Signature(
             value=self._signer.sign(
-                # to_sign=serialised_input_data
-                to_sign=chain_id
-                + int(0).to_bytes()
-                + serialised_input_data
+                to_sign=chain_id + int(0).to_bytes() + serialised_input_data
             ).hex(),
             algo="vega/ed25519",
             version=1,
@@ -65,7 +62,7 @@ class Client:
             nonce=solve(block_hash=block_hash, tx_id=tx_id, difficulty=difficulty),
         )
 
-    def submit_transaction(
+    def sign_transaction(
         self,
         transaction: Any,
         transaction_type: str,
@@ -81,7 +78,7 @@ class Client:
 
         serialised = input_data.SerializeToString()
 
-        trans = transaction_proto.Transaction(
+        return transaction_proto.Transaction(
             input_data=serialised,
             signature=self._sign_tx(
                 serialised_input_data=serialised, chain_id=bytes(res.chain_id, "utf-8")
@@ -90,11 +87,17 @@ class Client:
             version=3,
             pow=self._calc_pow(block_hash=res.hash, difficulty=res.spam_pow_difficulty),
         )
-        request = core_proto.SubmitTransactionRequest(
-            tx=trans, type=core_proto.SubmitTransactionRequest.Type.TYPE_ASYNC
+
+    def submit_transaction(
+        self,
+        transaction: Any,
+        transaction_type: str,
+    ) -> core_proto.SubmitTransactionResponse:
+        signed_tx = self.sign_transaction(
+            transaction=transaction, transaction_type=transaction_type
         )
 
-        return self._core_data_client.SubmitTransaction(request)
+        return self._core_data_client.SubmitTransaction(signed_tx)
 
     def _get_nonce(self) -> int:
         return random.randint(1, 1e10)
