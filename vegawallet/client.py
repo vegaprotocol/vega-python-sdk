@@ -69,7 +69,7 @@ class Client:
         num_tx_per_block: int,
     ) -> transaction_proto.ProofOfWork:
         tx_id = bytes(uuid.uuid4().hex, "utf-8")
-        min_block = block_height - num_past_blocks
+        min_block = block_height - num_past_blocks + 1
 
         to_del_blocks = [
             historic_block
@@ -86,12 +86,15 @@ class Client:
             self._pow_blocks_used.setdefault(block_height_to_use, 0) >= num_tx_per_block
         ):
             block_height_to_use -= 1
-        if block_height_to_use < min_block:
+        if (
+            block_height_to_use < min_block
+            or block_height_to_use not in self._block_hashes
+        ):
             # When increasing difficulty is enabled we can do more per block by doing more PoW
             # but as first cut this will avoid bans
             raise NoAvailablePoWBlockError(
-                "All blocks for PoW have been used. Sending a tx now would result in a"
-                " ban, so wait for more blocks to be produced"
+                "All seen blocks for PoW have been used. Sending a tx now would result"
+                " in a ban, so wait for more blocks to be produced. "
             )
         self._pow_blocks_used[block_height_to_use] += 1
 
