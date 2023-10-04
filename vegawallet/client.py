@@ -15,6 +15,10 @@ class TransactionFailureError(Exception):
     pass
 
 
+class NoAvailablePoWBlockError(Exception):
+    pass
+
+
 class Client:
     def __init__(self, mnemonic: str, grpc_url: str) -> None:
         self._signer = Signer.from_mnemonic(mnemonic=mnemonic)
@@ -29,6 +33,9 @@ class Client:
             self.grpc_url,
             channel=self._new_channel(),
         )
+
+        self._pow_blocks_used = {}
+        self._block_hashes = {}
 
     def _new_channel(self):
         channel = grpc.insecure_channel(
@@ -54,12 +61,47 @@ class Client:
         )
 
     def _calc_pow(
-        self, block_hash: str, difficulty: int
+        self,
+        block_hash: str,
+        difficulty: int,
+        block_height: int,
+        num_past_blocks: int,
+        num_tx_per_block: int,
     ) -> transaction_proto.ProofOfWork:
         tx_id = bytes(uuid.uuid4().hex, "utf-8")
+        min_block = block_height - num_past_blocks
+
+        to_del_blocks = [
+            historic_block
+            for historic_block in self._pow_blocks_used.keys()
+            if historic_block < min_block
+        ]
+        for block in to_del_blocks:
+            del self._pow_blocks_used[block]
+            del self._block_hashes[block]
+        self._block_hashes[block_height] = block_hash
+
+        block_height_to_use = block_height
+        while (
+            self._pow_blocks_used.setdefault(block_height_to_use, 0) >= num_tx_per_block
+        ):
+            block_height_to_use -= 1
+        if block_height_to_use < min_block:
+            # When increasing difficulty is enabled we can do more per block by doing more PoW
+            # but as first cut this will avoid bans
+            raise NoAvailablePoWBlockError(
+                "All blocks for PoW have been used. Sending a tx now would result in a"
+                " ban, so wait for more blocks to be produced"
+            )
+        self._pow_blocks_used[block_height_to_use] += 1
+
         return transaction_proto.ProofOfWork(
             tid=tx_id.decode(),
-            nonce=solve(block_hash=block_hash, tx_id=tx_id, difficulty=difficulty),
+            nonce=solve(
+                block_hash=self._block_hashes[block_height_to_use],
+                tx_id=tx_id,
+                difficulty=difficulty,
+            ),
         )
 
     def sign_transaction(
@@ -85,7 +127,13 @@ class Client:
             ),
             pub_key=self._signer._pub_key,
             version=3,
-            pow=self._calc_pow(block_hash=res.hash, difficulty=res.spam_pow_difficulty),
+            pow=self._calc_pow(
+                block_hash=res.hash,
+                difficulty=res.spam_pow_difficulty,
+                block_height=res.height,
+                num_past_blocks=res.spam_pow_number_of_past_blocks,
+                num_tx_per_block=res.spam_pow_number_of_tx_per_block,
+            ),
         )
 
     def submit_transaction(
@@ -97,7 +145,11 @@ class Client:
             transaction=transaction, transaction_type=transaction_type
         )
 
-        return self._core_data_client.SubmitTransaction(signed_tx)
+        return self._core_data_client.SubmitTransaction(
+            core_proto.SubmitTransactionRequest(
+                tx=signed_tx, type=core_proto.SubmitTransactionRequest.Type.TYPE_SYNC
+            )
+        )
 
     def _get_nonce(self) -> int:
-        return random.randint(1, 1e10)
+        return random.randint(1, int(1e10))
