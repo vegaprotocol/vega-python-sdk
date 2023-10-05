@@ -19,10 +19,10 @@ else
 endif
 
 build_proto: pull_deps
-	@rm -rf ./vegawallet/proto
-	@mkdir ./vegawallet/proto
+	@rm -rf ./vega/proto
+	@mkdir ./vega/proto
 	@buf generate extern/vega/protos/sources 
-	@GENERATED_DIR=./vegawallet/proto scripts/post-generate.sh
+	@GENERATED_DIR=./vega/proto scripts/post-generate.sh
 
 .PHONY: black
 black:

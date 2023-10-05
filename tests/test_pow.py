@@ -1,4 +1,4 @@
-from vegawallet.pow import solve
+from vega.pow import solve
 
 
 def test_pow():

@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "vega-wallet-python"
-version = "0.1.0"
+name = "vega-sdk-python"
+version = "0.1.1"
 description = "Python bindings for processing and sending Vega transactions"
 authors = ["Tom McLean <tom@vegaprotocol.io>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "vega_wallet_python"}]
+packages = [{include = "vega"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"

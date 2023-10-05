@@ -1,7 +1,7 @@
 import grpc
 from abc import ABC
-from vegawallet.proto.data_node.api.v2 import trading_data_grpc as trading_data_grpc_v2
-from vegawallet.proto.vega.api.v1 import core_grpc
+from vega.proto.data_node.api.v2 import trading_data_grpc as trading_data_grpc_v2
+from vega.proto.vega.api.v1 import core_grpc
 
 
 class GRPCClient(ABC):
