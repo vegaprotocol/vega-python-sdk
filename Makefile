@@ -31,3 +31,7 @@ black:
 .PHONY: blackcheck
 blackcheck:
 	@black --check .
+
+.PHONY: test
+test:
+	@env PYTHONPATH=. pytest .
