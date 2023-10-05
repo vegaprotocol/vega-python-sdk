@@ -27,3 +27,7 @@ build_proto: pull_deps
 .PHONY: black
 black:
 	@black .
+
+.PHONY: blackcheck
+blackcheck:
+	@black --check .
