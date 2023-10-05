@@ -1,6 +1,5 @@
 from hashlib import sha3_256
 
-BLOCK_HASH_LEN = 64
 MAX_NONCE = 18446744073709551615
 
 
