@@ -39,7 +39,7 @@ __all__ = [
 
 
 def main():
-    p = "vegawallet/proto/vega/"
+    p = "vega/proto/vega/"
     exclude_pb2 = []
     pb2_files = sorted(
         f[:-7]

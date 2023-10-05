@@ -1,4 +1,4 @@
-from vegawallet.auth import Signer
+from vega.auth import Signer
 
 
 def test_from_pkey():

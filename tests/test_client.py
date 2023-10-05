@@ -5,16 +5,16 @@ from contextlib import closing
 import grpc
 import pytest
 
-import vegawallet.proto.vega.api.v1.core_pb2 as core_proto
-import vegawallet.proto.vega.commands.v1.commands_pb2 as commands_proto
-from vegawallet.client import Client
-from vegawallet.proto.data_node.api.v2.trading_data_pb2_grpc import (
+import vega.proto.vega.api.v1.core_pb2 as core_proto
+import vega.proto.vega.commands.v1.commands_pb2 as commands_proto
+from vega.client import Client
+from vega.proto.data_node.api.v2.trading_data_pb2_grpc import (
     TradingDataServiceServicer as TradingDataServiceServicerV2,
 )
-from vegawallet.proto.data_node.api.v2.trading_data_pb2_grpc import (
+from vega.proto.data_node.api.v2.trading_data_pb2_grpc import (
     add_TradingDataServiceServicer_to_server as add_TradingDataServiceServicer_v2_to_server,
 )
-from vegawallet.proto.vega.api.v1.core_pb2_grpc import (
+from vega.proto.vega.api.v1.core_pb2_grpc import (
     CoreServiceServicer,
     add_CoreServiceServicer_to_server,
 )

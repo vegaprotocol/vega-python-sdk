@@ -3,12 +3,12 @@ import grpc
 import uuid
 from typing import Any
 
-import vegawallet.proto.vega.api.v1.core_pb2 as core_proto
-import vegawallet.proto.vega.commands.v1.signature_pb2 as signature_proto
-import vegawallet.proto.vega.commands.v1.transaction_pb2 as transaction_proto
-from vegawallet.auth import Signer
-from vegawallet.pow import solve
-from vegawallet.grpc.client import VegaCoreClient, VegaTradingDataClient
+import vega.proto.vega.api.v1.core_pb2 as core_proto
+import vega.proto.vega.commands.v1.signature_pb2 as signature_proto
+import vega.proto.vega.commands.v1.transaction_pb2 as transaction_proto
+from vega.auth import Signer
+from vega.pow import solve
+from vega.grpc.client import VegaCoreClient, VegaTradingDataClient
 
 
 class TransactionFailureError(Exception):
@@ -54,7 +54,9 @@ class Client:
     ) -> signature_proto.Signature:
         return signature_proto.Signature(
             value=self._signer.sign(
-                to_sign=chain_id + int(0).to_bytes() + serialised_input_data
+                to_sign=chain_id
+                + int(0).to_bytes(length=1, byteorder="big")
+                + serialised_input_data
             ).hex(),
             algo="vega/ed25519",
             version=1,
