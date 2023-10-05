@@ -54,7 +54,9 @@ class Client:
     ) -> signature_proto.Signature:
         return signature_proto.Signature(
             value=self._signer.sign(
-                to_sign=chain_id + int(0).to_bytes(length=1) + serialised_input_data
+                to_sign=chain_id
+                + int(0).to_bytes(length=1, byteorder="big")
+                + serialised_input_data
             ).hex(),
             algo="vega/ed25519",
             version=1,
