@@ -71,6 +71,7 @@ def test_basic_signing(servicers_and_port):
             " happy purchase dove rely obey dry slow action call unlock also foot clump"
         ),
         grpc_url=f"localhost:{port}",
+        derivations=1,
     )
     assert (
         client._signer._pub_key
@@ -79,4 +80,21 @@ def test_basic_signing(servicers_and_port):
 
     client.submit_transaction(
         commands_proto.BatchMarketInstructions(), "batch_market_instructions"
+    )
+
+
+def test_client_pubkey(servicers_and_port):
+    _, port, _, _ = servicers_and_port
+
+    client = Client(
+        mnemonic=(
+            "fancy basket install citizen purchase flush raven valid pottery short pony"
+            " happy purchase dove rely obey dry slow action call unlock also foot clump"
+        ),
+        grpc_url=f"localhost:{port}",
+        derivations=1,
+    )
+    assert (
+        client._signer._pub_key
+        == "af04195d9bdc08a9d709a3e5efa44e6e0e77dd539b64949e0a7dc6125b06a47b"
     )

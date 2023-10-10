@@ -20,8 +20,8 @@ class NoAvailablePoWBlockError(Exception):
 
 
 class Client:
-    def __init__(self, mnemonic: str, grpc_url: str) -> None:
-        self._signer = Signer.from_mnemonic(mnemonic=mnemonic)
+    def __init__(self, mnemonic: str, grpc_url: str, derivations: int = 1) -> None:
+        self._signer = Signer.from_mnemonic(mnemonic=mnemonic, derivations=derivations)
 
         self.grpc_url = grpc_url
 
