@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "vega-sdk-python"
+name = "vega-python-sdk"
 version = "0.1.1"
 description = "Python bindings for processing and sending Vega transactions"
 authors = ["Tom McLean <tom@vegaprotocol.io>"]

@@ -5,6 +5,7 @@ from bip_utils import (
 )
 from hashlib import sha3_256
 
+
 logger = getLogger(__name__)
 
 FIRST_HARDENED_IDX = 2147483648
