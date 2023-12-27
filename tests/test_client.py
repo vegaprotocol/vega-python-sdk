@@ -5,9 +5,11 @@ from contextlib import closing
 import grpc
 import pytest
 
+import json
 import vega.proto.vega.api.v1.core_pb2 as core_proto
 import vega.proto.vega.commands.v1.commands_pb2 as commands_proto
-from vega.client import Client
+import vega.proto.vega.vega_pb2 as vega_proto
+from vega.client import Client, transaction_to_json
 from vega.proto.data_node.api.v2.trading_data_pb2_grpc import (
     TradingDataServiceServicer as TradingDataServiceServicerV2,
 )
@@ -112,3 +114,20 @@ def test_client_pubkey(servicers_and_port):
         client._signer._pub_key
         == "af04195d9bdc08a9d709a3e5efa44e6e0e77dd539b64949e0a7dc6125b06a47b"
     )
+
+
+def test_transaction_to_json():
+    order = commands_proto.OrderSubmission(
+        market_id="69abf5c456c20f4d189cea79a11dfd6b0958ead58ab34bd66f73eea48aee600c",
+        price="1",
+        size=1,
+        side=vega_proto.Side.SIDE_BUY,
+        time_in_force=vega_proto.Order.TimeInForce.TIME_IN_FORCE_GTC,
+        type=vega_proto.Order.Type.TYPE_LIMIT,
+    )
+    js = transaction_to_json(order)
+
+    assert js == {
+        "tx": "CkA2OWFiZjVjNDU2YzIwZjRkMTg5Y2VhNzlhMTFkZmQ2YjA5NThlYWQ1OGFiMzRiZDY2ZjczZWVhNDhhZWU2MDBjEgExGAEgASgBOAE=",
+        "type": "TYPE_SYNC",
+    }
