@@ -51,6 +51,10 @@ class Client:
             channel=self._new_channel(),
         )
 
+        self._starting_block_height = self._core_data_client.LastBlockHeight(
+            core_proto.LastBlockHeightRequest()
+        ).height
+
         self._pow_blocks_used = {}
         self._block_hashes = {}
 
@@ -86,9 +90,9 @@ class Client:
         block_height: int,
         num_past_blocks: int,
         num_tx_per_block: int,
-    ) -> transaction_proto.ProofOfWork:
+    ) -> (transaction_proto.ProofOfWork, int):
         tx_id = bytes(uuid.uuid4().hex, "utf-8")
-        min_block = block_height - num_past_blocks + 1
+        min_block = max(block_height - num_past_blocks + 5, self._starting_block_height)
 
         to_del_blocks = [
             historic_block
@@ -105,25 +109,29 @@ class Client:
             self._pow_blocks_used.setdefault(block_height_to_use, 0) >= num_tx_per_block
         ):
             block_height_to_use -= 1
+            if block_height_to_use < min_block:
+                break
         if (
             block_height_to_use < min_block
             or block_height_to_use not in self._block_hashes
         ):
-            # When increasing difficulty is enabled we can do more per block by doing more PoW
-            # but as first cut this will avoid bans
-            raise NoAvailablePoWBlockError(
-                "All seen blocks for PoW have been used. Sending a tx now would result"
-                " in a ban, so wait for more blocks to be produced. "
-            )
+            # No easy blocks left so just use latest block and a harder
+            # difficulty will apply
+            block_height_to_use = block_height
+
         self._pow_blocks_used[block_height_to_use] += 1
 
-        return transaction_proto.ProofOfWork(
-            tid=tx_id.decode(),
-            nonce=solve(
-                block_hash=self._block_hashes[block_height_to_use],
-                tx_id=tx_id,
-                difficulty=difficulty,
+        return (
+            transaction_proto.ProofOfWork(
+                tid=tx_id.decode(),
+                nonce=solve(
+                    block_hash=self._block_hashes[block_height_to_use],
+                    tx_id=tx_id,
+                    difficulty=difficulty
+                    + self._pow_blocks_used[block_height_to_use] // num_tx_per_block,
+                ),
             ),
+            block_height_to_use,
         )
 
     def sign_transaction(
@@ -135,9 +143,17 @@ class Client:
             core_proto.LastBlockHeightRequest()
         )
 
+        pow_val, height_to_use = self._calc_pow(
+            block_hash=res.hash,
+            difficulty=res.spam_pow_difficulty,
+            block_height=res.height,
+            num_past_blocks=res.spam_pow_number_of_past_blocks,
+            num_tx_per_block=res.spam_pow_number_of_tx_per_block,
+        )
+
         transaction_info = {transaction_type: transaction}
         input_data = transaction_proto.InputData(
-            nonce=self._get_nonce(), block_height=res.height, **transaction_info
+            nonce=self._get_nonce(), block_height=height_to_use, **transaction_info
         )
 
         serialised = input_data.SerializeToString()
@@ -149,13 +165,7 @@ class Client:
             ),
             pub_key=self._signer._pub_key,
             version=3,
-            pow=self._calc_pow(
-                block_hash=res.hash,
-                difficulty=res.spam_pow_difficulty,
-                block_height=res.height,
-                num_past_blocks=res.spam_pow_number_of_past_blocks,
-                num_tx_per_block=res.spam_pow_number_of_tx_per_block,
-            ),
+            pow=pow_val,
         )
 
     def submit_transaction(
