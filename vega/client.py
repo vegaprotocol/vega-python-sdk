@@ -90,9 +90,13 @@ class Client:
         block_height: int,
         num_past_blocks: int,
         num_tx_per_block: int,
+        max_historic_blocks_buffer: int = 5,
     ) -> (transaction_proto.ProofOfWork, int):
         tx_id = bytes(uuid.uuid4().hex, "utf-8")
-        min_block = max(block_height - num_past_blocks + 5, self._starting_block_height)
+        min_block = max(
+            block_height - num_past_blocks + max_historic_blocks_buffer,
+            self._starting_block_height,
+        )
 
         to_del_blocks = [
             historic_block
